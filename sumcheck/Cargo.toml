@@ -1,0 +1,10 @@
+[package]
+name = "thaler-4-1-sumcheck"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ark-ff = { git = "https://github.com/w3f/arkworks-algebra"}
+ark-poly = {git = "https://github.com/w3f/arkworks-algebra"}
