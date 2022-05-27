@@ -2,6 +2,7 @@ extern crate ark_ff;
 extern crate ark_poly;
 
 pub mod prover;
+pub mod verifier;
 
 #[cfg(test)]
 mod tests {
