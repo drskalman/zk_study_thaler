@@ -5,15 +5,16 @@ use std::cmp::Ordering;
 use crate::verifier::Verifier;
 
 /// The struct which contains all data needed for the prover to play its part
-struct Prover<F: Field> {
-    h_poly: SparsePolynomial<F, SparseTerm>,
-    verifier_random_values : Vec<F>
+pub struct Prover<F: Field> {
+    pub h_poly: SparsePolynomial<F, SparseTerm>,
+    pub verifier_random_values : Vec<F>
 
 }
 
 impl <F: Field> Prover<F> {
     ///The main function which trigger and represents sum-check interactive protocol
     pub fn play_sum_check_protocol(&mut self, mut cur_verifier: Verifier<F>) {
+        self.verifier_random_values = vec![];
         cur_verifier.receive_sum_value(self.evaluate_one_variable(&Vec::<F>::new()));
 
         //porotocol rounds start here, one round per variable
@@ -23,7 +24,8 @@ impl <F: Field> Prover<F> {
                 Err(_) => {break;},
             }
         }
-            
+
+        println!("played protocol for {}", self.verifier_random_values.len());
     }
     ///sum of the evaulation of the multivariate polynomial
     /// over all possible binary input

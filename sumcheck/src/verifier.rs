@@ -4,18 +4,21 @@ use rand::{thread_rng};
 
 /// The struct which represt a sumcheck verifier
 pub struct Verifier<F: Field> {
-    h_poly: SparsePolynomial<F, SparseTerm>,
-    poly_sum_over_domain : F,
-    rounds_verified : usize,
-    random_values: Vec<F>
+    pub h_poly: SparsePolynomial<F, SparseTerm>,
+    pub poly_sum_over_domain : F,
+    pub rounds_verified : usize,
+    pub random_values: Vec<F>
         
 }
 impl <F: Field> Verifier<F> {
     pub fn reset_state(&mut self) {
         self.rounds_verified = 0;
+        self.poly_sum_over_domain = F::zero();
+        self.random_values = vec![];
     }
     
     pub fn receive_sum_value(&mut self, eval_sum_from_prover: F) {
+        self.reset_state();
         self.poly_sum_over_domain = eval_sum_from_prover;
     }
 
