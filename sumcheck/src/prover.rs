@@ -1,5 +1,5 @@
-use ark_poly::{Polynomial, multivariate::SparsePolynomial,multivariate::SparseTerm, MVPolynomial, univariate::DensePolynomial};
-use ark_ff::Field;
+use ark_poly::{Polynomial, UVPolynomial, multivariate::{SparsePolynomial, Term, SparseTerm}, MVPolynomial, univariate::DensePolynomial};
+use ark_ff::{Field, Zero};
 
 use std::cmp::Ordering;
 use crate::verifier::Verifier;
@@ -13,13 +13,13 @@ struct Prover<F: Field> {
 
 impl <F: Field> Prover<F> {
     ///The main function which trigger and represents sum-check interactive protocol
-    pub fn play_sum_check_protocol(cur_verifier: &Verifier) {
-        verifier.receive_sum_value(self.evaluate_one_variable(&Vec::<F>::new()));
+    pub fn play_sum_check_protocol(&mut self, mut cur_verifier: Verifier<F>) {
+        cur_verifier.receive_sum_value(self.evaluate_one_variable(&Vec::<F>::new()));
 
         //porotocol rounds start here, one round per variable
-        for i in 0..h_poly.num_vars() {
-            match verifier.receive_univariate_poly_g(i, self.compute_univariate_poly_g(i)) {
-                OK(next_random_value) => verifier_random_values.push(next_random_value),
+        for i in 0..self.h_poly.num_vars() {
+            match cur_verifier.receive_univariate_poly_g(i, self.compute_univariate_poly_g(i)) {
+                Ok(next_random_value) => self.verifier_random_values.push(next_random_value),
                 Err(_) => {break;},
             }
         }
@@ -53,34 +53,43 @@ impl <F: Field> Prover<F> {
         
     }
 
-    fn compute_univariate_poly_g(&self, i: u32) {
-        self.evaluate_one_variable_except_one(i,&Vec::<F>::new())
+    fn compute_univariate_poly_g(&mut self, i: usize) -> DensePolynomial<F> {
+        self.evaluate_one_variable_except_one(i,Vec::<F>::new())
     }
 
     /// play one round of sum check that is to evaluate at the given point for  all variables
     /// up to exception index and run sum on the domain 0,1 on the remaining after excetion index
-    fn evaluate_one_variable_except_one(&self, exception_index: u32, point_vec: &Vec<F>) -> DensePoly{
-        assert(self.h_poly.num_vars() != 0, "not expecting a multi-variate polynomial of zero variable");
-            if point_vec.len() < self.h_poly.num_vars()  {
-                match point_vec.len() {                    
+    fn evaluate_one_variable_except_one(&mut self, exception_index: usize, mut point_vec: Vec<F>) -> DensePolynomial<F>{
+        assert!(self.h_poly.num_vars() != 0, "not expecting a multi-variate polynomial of zero variable");
+            if point_vec.len() < self.h_poly.num_vars()  { //because we don't deal (and skip) with exception index in this clause  {
+                match point_vec.len().cmp(&exception_index) {                    
                     // if we are less than the exception then we put verifier's provided value
-                    Ordering::Less => point_vec.push(self.verifier_random_values),
-                    Ordering::Equal => _,
-                    Ordering::Greater => {
-                        
-                        // if we are equal exception we just simply skip and we deal with it later.                    
-                        // if we are more than the exception we recursively branch
+                    Ordering::Less => {
+                        point_vec.push(self.verifier_random_values[point_vec.len()]);
+                        self.evaluate_one_variable_except_one(exception_index, point_vec)
+                    }
+
+                     // if we are equal to exception index  we just simply put one as place holde and deal with it later                     
+                    Ordering::Equal => {
+                        point_vec.push(F::one());
+                        self.evaluate_one_variable_except_one(exception_index, point_vec)
+                    }
+                    
+
+                    Ordering::Greater  => {
+                        // if we are greater than the exception indexwe recursively branch out
                         let mut point_vec_0 = point_vec.clone();
                         point_vec_0.push(F::zero());
-                        let value_at_0 = self.evaluate_one_variable_except_one(exception_index, &point_vec_0);
+                        let value_at_0 = self.evaluate_one_variable_except_one(exception_index, point_vec_0);
 
                         let mut point_vec_1 = point_vec.clone();
                         point_vec_1.push(F::one());
-                        let value_at_1 = self.evaluate_one_variable_except_one(exception_index, &point_vec_1);
+                        let value_at_1 = self.evaluate_one_variable_except_one(exception_index, point_vec_1);
 
                         value_at_0 + value_at_1
+
                     }
-                } //match
+                } //atch
 
             } else {
                 //we have all variable value and we can simply evaluate the polynomial
@@ -90,18 +99,17 @@ impl <F: Field> Prover<F> {
     }
 
     /// Evaluates `self` at the given `point` in `Self::Point`.
-    fn evaluate_to_univariate(&self, variable_index_to_keep: u32, point: &Vec<F>, ) -> F {
-        assert!(point.len() != self.num_vars - 1, "wrong evaluation vector size");
-        let sum : DensePolynomai = DensePolynomial::Zero;
+    fn evaluate_to_univariate(&mut self, variable_index_to_keep: usize, mut point: &Vec<F>, ) -> DensePolynomial<F> {
+        assert!(point.len() != self.h_poly.num_vars() - 1, "wrong evaluation vector size");
+        let mut sum : DensePolynomial<F> = DensePolynomial::<F>::zero();
 
-        let extended_point = point.insert(variable_index_to_keep, F::One);
-        for cur_term in self.terms {
+        for cur_term in &self.h_poly.terms {
             //we are going to evaluate the term with our variable equal to 1 then multiply
             //the resulting coefficient with correct pover of X
-            let power_of_var = term.powers()[variable_index_to_keep];
-            let coeff_vect = Vec::<F> = vec![F::Zero; power_of_var + 1];
-            coeff_vect[power_of_var] = cur_term.evaluate(extended_point);
-            sum += DensePolynomial::from_coefficient_vector(coeff_vect);
+            let power_of_var = cur_term.1.powers()[variable_index_to_keep];
+            let mut  coeff_vect : Vec::<F> = vec![F::zero(); power_of_var + 1];
+            coeff_vect[power_of_var] = cur_term.0 * cur_term.1.evaluate(&point);
+            sum = sum + DensePolynomial::<F>::from_coefficients_vec(coeff_vect);
         }
 
         sum

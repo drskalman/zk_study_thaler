@@ -1,11 +1,12 @@
-use ark_poly::{Polynomial, multivariate::SparsePolynomial,multivariate::SparseTerm, MVPolynomial};
+use ark_poly::{Polynomial, univariate::DensePolynomial, multivariate::SparsePolynomial,multivariate::{SparseTerm, Term}, MVPolynomial};
 use ark_ff::Field;
+use rand::{thread_rng};
 
 /// The struct which represt a sumcheck verifier
-struct Verifier<F: Field> {
+pub struct Verifier<F: Field> {
     h_poly: SparsePolynomial<F, SparseTerm>,
     poly_sum_over_domain : F,
-    rounds_verified : u32,
+    rounds_verified : usize,
     random_values: Vec<F>
         
 }
@@ -15,30 +16,31 @@ impl <F: Field> Verifier<F> {
     }
     
     pub fn receive_sum_value(&mut self, eval_sum_from_prover: F) {
-        poly_sum_over_domain = eval_sum_from_prover;
+        self.poly_sum_over_domain = eval_sum_from_prover;
     }
 
-    pub fn receive_univariate_poly_g(i : u32, g_i: DensePolynomial) -> Result<F, Err> {        
-        if (rounds_verified != i - 1) { //we do not verify round i before all i-1th rounds are verified
-            false
+    pub fn receive_univariate_poly_g(&mut self, i : usize, g_i: DensePolynomial<F>) -> Result<F, &'static str> {
+        if (self.rounds_verified != i - 1) {
+            return Err("we do not verify round i before all i-1th rounds are verified");
+            
         }
 
-        match (poly_sum_over_domain == g_i.evaluate(F::Zero) + g_i.evaluate(F::One) &&
-               g_i.degree() <= deg_i_g(h_poly, i))
+        match (self.poly_sum_over_domain == g_i.evaluate(&F::zero()) + g_i.evaluate(&F::one()) &&
+               g_i.degree() <= self.deg_i_g(i))
         {
             true => {                
-                rounds_verified = i;
-                Ok(F::rand())                
+                self.rounds_verified = i;
+                Ok(F::rand(&mut thread_rng()))                
             }
             false => {
-                Err()
+                Err("verification failed")
             }
         }        
     }
 
     ///return the degree of g(X_1,..,X_v) in variable X_j
-    fn deg_i_g(&self, j: u32) {
-        h_poly.terms().iter().map(|(_,term)| term.powers()[j]).max()
+    fn deg_i_g(&self, j: usize) -> usize {
+        self.h_poly.terms().iter().map(|(_,term)| term.powers()[j]).max().unwrap()
     }
 
     

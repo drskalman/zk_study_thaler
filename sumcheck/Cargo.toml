@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 ark-ff = { git = "https://github.com/w3f/arkworks-algebra"}
 ark-poly = {git = "https://github.com/w3f/arkworks-algebra"}
+rand = "0.8"
