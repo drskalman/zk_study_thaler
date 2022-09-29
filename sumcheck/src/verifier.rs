@@ -1,4 +1,4 @@
-use ark_poly::{Polynomial, univariate::DensePolynomial, multivariate::SparsePolynomial,multivariate::{SparseTerm, Term}, MVPolynomial};
+use ark_poly::{Polynomial, univariate::DensePolynomial, multivariate::SparsePolynomial,multivariate::{SparseTerm, Term}, DenseMVPolynomial};
 use ark_ff::Field;
 use rand::{thread_rng};
 

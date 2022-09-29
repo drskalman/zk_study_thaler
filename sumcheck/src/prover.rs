@@ -1,4 +1,4 @@
-use ark_poly::{Polynomial, UVPolynomial, multivariate::{SparsePolynomial, Term, SparseTerm}, MVPolynomial, univariate::DensePolynomial};
+use ark_poly::{Polynomial, DenseMVPolynomial, multivariate::{SparsePolynomial, Term, SparseTerm}, DenseUVPolynomial, univariate::DensePolynomial};
 use ark_ff::{Field, Zero};
 
 use std::cmp::Ordering;
