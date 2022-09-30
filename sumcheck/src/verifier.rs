@@ -38,10 +38,18 @@ impl<F: Field> Verifier<F> {
             return Err("we do not verify round i before all i-1th rounds are verified");
         }
 
-        let ref_value = if (i == 0) {
-            self.poly_sum_over_domain
-        } else {
-            self.univar_polys[i - 1].evaluate(&self.random_values[i - 1])
+        if i == self.h_poly.num_vars() {
+            return match self.h_poly.evaluate(&self.random_values) == g_i.evaluate(&F::zero()) {
+                true => {
+                    println!("sum verified!");
+                    Ok(F::one())
+                }
+                false => Err("verification failed"),
+            };
+        };
+        let ref_value = match i {
+            0 => self.poly_sum_over_domain,
+            _ => self.univar_polys[i - 1].evaluate(&self.random_values[i - 1]),
         };
 
         match (ref_value == g_i.evaluate(&F::zero()) + g_i.evaluate(&F::one())

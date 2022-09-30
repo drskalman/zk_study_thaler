@@ -21,7 +21,7 @@ impl<F: Field> Prover<F> {
         cur_verifier.receive_sum_value(self.evaluate_one_variable(&Vec::<F>::new()));
 
         //porotocol rounds start here, one round per variable
-        for i in 0..self.h_poly.num_vars() {
+        for i in 0..self.h_poly.num_vars() + 1 {
             match cur_verifier.receive_univariate_poly_g(i, self.compute_univariate_poly_g(i)) {
                 Ok(next_random_value) => self.verifier_random_values.push(next_random_value),
                 Err(_) => {
