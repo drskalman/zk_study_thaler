@@ -1,0 +1,9 @@
+[package]
+name = "plonk_vs_qap"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ark-ff = { version = "0.4.0-alpha" default-features = false}
