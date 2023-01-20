@@ -50,12 +50,17 @@ impl<F: Field> PythaProver<F> {
 
     /// Return true 
     fn does_witness_satisfy_constrain() -> bool {
+	//Arithmetic constrain
         //sym_1 = x * x   -sym_1 + x * x = 0
         //sym_2 = y * y   -sym_2 + y * y = 0
         //sym_3 = z * z   -sym_3 + z * z = 0
         //sym_3 = sym_1 + sym_2 -sym_3 + sym_1 + sym_2 = 0
-        asert!(self.
-        
+        asert!(self.full_witness[0][0] * self.full_witness[1][0] == self.full_witness[2][0]);
+        asert!(self.full_witness[0][1] * self.full_witness[1][1] == self.full_witness[2][1]);
+        asert!(self.full_witness[0][2] * self.full_witness[1][1] == self.full_witness[2][2]);
+        asert!(self.full_witness[0][3] + self.full_witness[1][3] == self.full_witness[2][3]);
+
+	//TODO: copy constrain
     }
 }
 
@@ -65,7 +70,7 @@ impl<F: Field> SnarkProver<F> for PythoProver<F> {
         vec![]
     }
 }
-
+'
 ///Plonk Verifier
 pub fn verify_proof(proof: Vec<u32>)-> bool {
     false

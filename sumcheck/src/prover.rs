@@ -60,7 +60,7 @@ impl<F: Field> Prover<F> {
 
     fn compute_univariate_poly_g(&mut self, i: usize) -> DensePolynomial<F> {
         let derived_uni_poly = self.evaluate_one_variable_except_one(i, Vec::<F>::new());
-        println!("dervied uni poly g_i: {:?} for i: {}", derived_uni_poly, i);
+        //println!("dervied uni poly g_i: {:?} for i: {}", derived_uni_poly, i);
         derived_uni_poly
     }
 
